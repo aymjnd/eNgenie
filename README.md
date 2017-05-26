@@ -1,9 +1,9 @@
 # eNgenie
 Nginx Genie
 
-script for nginx virtualhost creation as easy as 1-2-3.
+Bash script for nginx virtualhost creation as easy as 1-2-3.
 
-intended only for 
+Intended only for:
  - Ubuntu 14.04, nginx, php5-fpm
  - Ubuntu 16.04, nginx, php7-fpm
  
