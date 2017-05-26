@@ -1,0 +1,226 @@
+#!/bin/bash
+TEXTDOMAIN=virtualhost
+
+### waw ubuntu 14.04 nginx php5-fpm
+# global? mv this to /usr/local/bin, chmod +x
+# else rename to anything.sh , ./anything.sh
+
+### Set default parameters - vhost [create|delete] [example.com] [/path/to/hell]
+action=$1
+domain=$2
+root=$3
+
+# nginx dir ubuntu 14.04
+nginx=/var/www/
+
+# Put owner/group that nginx must run over for your system.
+owner=$(who am i | awk '{print $1}')
+group=www-data
+
+#nginx default
+sitesEnable='/etc/nginx/sites-enabled/'
+sitesAvailable='/etc/nginx/sites-available/'
+
+#nginx restart command lul
+restart='systemctl reload nginx'
+
+#check for root
+if [ "$(whoami)" != 'root' ]; then
+	echo $"You don't have the permission to run $0 as non-root user. Sudo maybe?"
+		exit 1;
+fi
+
+if [ "$action" != 'create' ] && [ "$action" != 'delete' ]
+	then
+		echo $"You need to prompt for action (create or delete) -- Lower-case only"
+		exit 1;
+fi
+
+while [ "$domain" == "" ]
+do
+	echo -e $"Please provide domain. e.g. example.com"
+	read domain
+done
+
+if [ "$action" == 'create' ]
+	then
+		while [ "$root" == "" ]
+		do
+			example=example
+			echo -e $"Enter directore name e.g 'example' for $nginx$example"
+			read root
+		done
+		### check if domain already exists
+		if [ -e $sitesAvailable$domain ]; then
+			echo -e $"This domain already exists. Exit."
+			exit;
+		fi
+		### create php-fpm pool
+		phpfpm="/etc/php/7.0/fpm/pool.d/$domain.conf"
+
+		if ! echo "[$domain]
+			user = www-data
+			group = www-data
+			listen = /var/run/php7-fpm-$domain.sock
+			listen.owner = www-data
+			listen.group = www-data
+			php_admin_value[disable_functions] = exec,passthru,shell_exec,system
+			php_admin_flag[allow_url_fopen] = off
+			pm = dynamic
+			pm.max_children = 5
+			pm.start_servers = 2
+			pm.min_spare_servers = 1
+			pm.max_spare_servers = 3
+			chdir = /
+			" > $phpfpm
+		then
+			echo -e $"There is an ERROR create $domain.conf file"
+			exit;
+		else
+			echo -e $"New $domain.conf Created."
+		fi
+		
+		### restart php-fpm
+		sudo systemctl restart php7.0-fpm
+		
+		### change /etc/php/7.0/fpm/conf.d/10-opcache.ini
+		opcache='/etc/php/7.0/fpm/conf.d/10-opcache.ini'
+		sh -c "echo 'opcache.enable=0' >> $opcache"
+		
+		### check if directory exists or not
+		if ! [ -d $nginx$root ]; then
+			### create the directory
+			mkdir $nginx$root
+			### give permission to root dir
+			chmod 755 $nginx$root
+			### write test file in the new domain dir
+			if ! echo $domain > $nginx$root/index.html
+				then
+					echo $"ERROR: Unable to write in $nginx$root/. Please check permissions."
+					exit;
+			else
+					echo $"Added index.html into $nginx$root/"
+			fi
+			if ! echo "<?php phpinfo(); ?>" > $nginx$root/info.php
+				then
+					echo $"ERROR: Unable to write in $nginx$root/. Please check permissions."
+					exit;
+			else
+					echo $"Added info.php into $nginx$root/"
+			fi
+		fi
+
+		### create virtual host rules file
+		if ! echo "server {
+			listen   80;
+			root $nginx$root;
+			index index.php index.html index.htm;
+			server_name $domain;
+
+			# serve static files directly
+			location ~* \.(jpg|jpeg|gif|css|png|js|ico|html)\$ {
+				access_log off;
+				expires max;
+			}
+
+
+			# catch all
+			error_page 404 /index.php;
+
+			location / {
+
+				#beauty rewrite like http://example.com/waw/
+				#try_files $uri $uri/ /index.php?$args;
+
+				#standard try
+				try_files \$uri \$uri/ /index.php?\$query_string;
+
+				#redirect
+                   		# include /etc/nginx/templates/redirects;
+
+			}
+
+			if (!-d \$request_filename) {
+            			rewrite ^/(.+)/\$ /\$1 permanent;
+		    	}
+
+
+		    	location ~* \.php\$ {
+		        	try_files \$uri =404;
+		        	# Server PHP config.
+		        	fastcgi_pass unix:/var/run/php7-fpm-$domain.sock;
+		        	fastcgi_index index.php;
+		        	fastcgi_split_path_info ^(.+\.php)(/.+)\$;
+
+		        	# Typical vars in here, nothing interesting.
+
+			        include fastcgi_params;
+			        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+
+		    	}
+
+		    	location ~ /\.ht {
+		    	        deny all;
+
+		    	}
+
+		}" > $sitesAvailable$domain
+		then
+			echo -e $"There is an ERROR create $domain file"
+			exit;
+		else
+			echo -e $"New Virtual Host Created."
+		fi
+
+		### Add domain in /etc/hosts
+		if ! echo "127.0.0.1	$domain" >> /etc/hosts
+			then
+				echo $"ERROR: Not able write in /etc/hosts"
+				exit;
+		else
+				echo -e $"Host added to /etc/hosts file."
+		fi
+
+		chown -R $owner:$group $nginx$root
+
+		### enable website
+		ln -s $sitesAvailable$domain $sitesEnable$domain
+
+		### restart Nginx
+		$restart
+
+		### show the finished message
+		echo -e $"Done! \nYour new host is: http://$domain located at $nginx$root"
+		exit;
+	else
+		### check whether domain already exists
+		if ! [ -e $sitesAvailable$domain ]; then
+			echo -e $"This domain doesn't exists!"
+			exit;
+		else
+			olddir=$(head -3 /etc/nginx/sites-enabled/$domain|tail -1| awk -F " |;" '{print $2}')
+			### Delete domain in /etc/hosts
+			newhost=${domain//./\\.}
+			sed -i "/$newhost/d" /etc/hosts
+
+			### disable website
+			rm $sitesEnable$domain
+
+			### delete user data
+			rm -rf $olddir
+
+			#service nginx restart
+			$restart
+			### Delete virtual host rules files
+			rm $sitesAvailable$domain
+			
+			rm /var/run/php7-fpm-$domain.sock
+			systemctl restart php7.0-fpm
+			
+		fi
+
+		### show the finished message
+		echo -e $"$olddir deleted. You don't have backup? It's too late now."
+		exit 0;
+fi
+
