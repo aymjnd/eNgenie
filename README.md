@@ -19,7 +19,7 @@ For 14.04
 $ git clone https://github.com/anazhd/eNgenie.git
 $ cd eNgenie
 $ chmod +x vhost14
-$ sudo ./vhost [create|delete] [example.com]
+$ sudo ./vhost14 [create|delete] [example.com]
 ```
 For 14.04 Global Shortcut
 ```bash
@@ -32,7 +32,7 @@ For 16.04
 $ git clone https://github.com/anazhd/eNgenie.git
 $ cd eNgenie
 $ chmod +x vhost16
-$ sudo ./vhost [create|delete] [domain]
+$ sudo ./vhost16 [create|delete] [example.com]
 ```
 For 16.04 Global Shortcut
 ```bash
