@@ -1,11 +1,13 @@
 # eNgenie
 Nginx Genie
+now with Ubuntu 16.04 Apache2 
 
-Bash script for nginx virtualhost creation as easy as 1-2-3.
+Bash script for nginx/apache2 virtualhost creation as easy as 1-2-3.
 
 Intended only for:
  - Ubuntu 14.04, nginx, php5-fpm
  - Ubuntu 16.04, nginx, php7-fpm
+ - Ubuntu 16.04, apache2, php7
  
 ## Instructions for LEMP(Linux, Nginx, MySQL, PHP)
 For 16.04
