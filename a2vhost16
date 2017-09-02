@@ -1,0 +1,164 @@
+#!/bin/bash
+TEXTDOMAIN=virtualhost
+
+### waw ubuntu 16.04 apache2 php7
+# global? mv this to /usr/local/bin, chmod +x
+# else rename to anything.sh , ./anything.sh
+
+### Set default parameters - vhost [create|delete] [example.com] [/path/to/hell] [admin email]
+action=$1
+domain=$2
+root=$3
+email=$4
+
+# apache2 dir ubuntu 16.04
+a2=/var/www/
+
+# Put owner/group that apache2 must run over for your system.
+owner=$(who am i | awk '{print $1}')
+group=www-data
+
+#apache2 default
+sitesEnable='/etc/apache2/sites-enabled/'
+sitesAvailable='/etc/apache2/sites-available/'
+
+#apache2 restart command lul
+restart='/etc/init.d/apache2 reload'
+
+#check for root
+if [ "$(whoami)" != 'root' ]; then
+	echo $"You don't have the permission to run $0 as non-root user. Sudo maybe?"
+		exit 1;
+fi
+
+if [ "$action" != 'create' ] && [ "$action" != 'delete' ]
+	then
+		echo $"You need to prompt for action (create or delete) -- Lower-case only"
+		exit 1;
+fi
+
+while [ "$domain" == "" ]
+do
+	echo -e $"Please provide domain. e.g. example.com"
+	read domain
+done
+
+sitesAvailabledomain=$sitesAvailable$domain.conf
+
+if [ "$action" == 'create' ]
+	then
+		while [ "$root" == "" ]
+		do
+			example=example
+			echo -e $"Enter directory name e.g 'example' for $a2$example"
+			read root
+		done
+		
+		while [ "$email" == "" ]
+		do
+			echo -e $"Please provide administrator email"
+			read email
+		done
+		
+		### check if domain already exists
+		if [ -e $sitesAvailabledomain ]; then
+			echo -e $"This domain already exists. Exit."
+			exit;
+		fi
+		
+		### check if directory exists or not
+		if ! [ -d $a2$root ]; then
+			### create the directory
+			mkdir $a2$root
+			### give permission to root dir
+			chmod 755 $a2$root
+			### write test file in the new domain dir
+			if ! echo $domain > $a2$root/index.html
+				then
+					echo $"ERROR: Unable to write in $a2$root/. Please check permissions."
+					exit;
+			else
+					echo $"Added index.html into $a2$root/"
+			fi
+			if ! echo "<?php phpinfo(); ?>" > $a2$root/info.php
+				then
+					echo $"ERROR: Unable to write in $a2$root/. Please check permissions."
+					exit;
+			else
+					echo $"Added info.php into $a2$root/"
+			fi
+		fi
+
+		### create virtual host rules file
+		if ! echo "<VirtualHost *:80>
+	ServerAdmin $email
+	ServerName $domain
+	ServerAlias $domain
+	DocumentRoot $a2$root
+	<Directory />
+		AllowOverride All
+	</Directory>
+	<Directory $a2$root>
+		Options Indexes FollowSymLinks MultiViews
+		AllowOverride all
+		Require all granted
+	</Directory>
+	ErrorLog /var/log/apache2/$domain-error.log
+	LogLevel error
+	CustomLog /var/log/apache2/$domain-access.log combined
+</VirtualHost>" > $sitesAvailabledomain
+		then
+			echo -e $"There is an ERROR create $domain file"
+			exit;
+		else
+			echo -e $"New Virtual Host Created."
+		fi
+
+		### Add domain in /etc/hosts
+		if ! echo "127.0.0.1	$domain" >> /etc/hosts
+			then
+				echo $"ERROR: Not able write in /etc/hosts"
+				exit;
+		else
+				echo -e $"Host added to /etc/hosts file."
+		fi
+
+		chown -R $owner:$group $a2$root
+
+		### enable website
+		a2ensite $domain
+
+		### restart apache2
+		$restart
+
+		### show the finished message
+		echo -e $"Done! \nYour new host is: http://$domain located at $a2$root"
+		exit;
+	else
+		### check whether domain already exists
+		if ! [ -e $sitesAvailabledomain ]; then
+			echo -e $"This domain does not exist.\nPlease try another one"
+			exit;
+		else
+			olddir=$(head -5 /etc/apache2/sites-enabled/$domain.conf|tail -1| awk -F " |;" '{print $2}')
+			### Delete domain in /etc/hosts
+			newhost=${domain//./\\.}
+			sed -i "/$newhost/d" /etc/hosts
+
+			### disable website
+			a2dissite $domain.conf
+			
+			### delete user data
+			rm -rf $olddir
+
+			### restart Apache
+			/etc/init.d/apache2 reload
+
+			### Delete virtual host rules files
+			rm $sitesAvailabledomain
+		fi
+
+		### show the finished message
+		echo -e $"Complete!\nYou just removed Virtual Host $domain"
+		exit 0;
+fi
