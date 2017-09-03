@@ -29,6 +29,7 @@ $ cd /usr/local/bin && sudo wget -O vhost14 https://raw.githubusercontent.com/an
 $ sudo vhost14 [create|delete] [example.com]
 ```
 
+
 For 16.04
 ```bash
 $ git clone https://github.com/anazhd/eNgenie.git
@@ -42,15 +43,18 @@ $ cd /usr/local/bin && sudo wget -O vhost16 https://raw.githubusercontent.com/an
 $ sudo vhost16 [create|delete] [example.com]
 ```
 
+
 For 16.04 Apache2 / Lamp Stack
 ```bash
 $ git clone https://github.com/anazhd/eNgenie.git
 $ cd eNgenie
 $ chmod +x a2vhost16
+$ sudo a2dissite 000-default.conf
 $ sudo ./a2vhost16 [create|delete] [example.com]
 ```
 For 16.04 Apache2 / Lamp Stack Global Shortcut
 ```bash
 $ cd /usr/local/bin && sudo wget -O vhost16 https://raw.githubusercontent.com/anazhd/eNgenie/master/a2vhost16 && sudo chmod +x /usr/local/bin/a2vhost16
+$ sudo a2dissite 000-default.conf
 $ sudo a2vhost16 [create|delete] [example.com]
 ```
