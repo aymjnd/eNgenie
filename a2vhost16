@@ -11,7 +11,7 @@ domain=$2
 root=$3
 email=$4
 
-# apache2 dir ubuntu 16.04
+# apache2 uesr dir ubuntu 16.04
 a2=/var/www/
 
 # Put owner/group that apache2 must run over for your system.
