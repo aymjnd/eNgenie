@@ -58,7 +58,7 @@ $ sudo ./a2vhost16 [create|delete] [example.com]
 ```
 **For 16.04 + LAMP Global Shortcut**
 ```bash
-$ cd /usr/local/bin && sudo wget -O vhost16 https://raw.githubusercontent.com/anazhd/eNgenie/master/a2vhost16 && sudo chmod +x /usr/local/bin/a2vhost16
+$ cd /usr/local/bin && sudo wget -O a2vhost16 https://raw.githubusercontent.com/anazhd/eNgenie/master/a2vhost16 && sudo chmod +x /usr/local/bin/a2vhost16
 $ sudo a2dissite 000-default.conf
 $ sudo a2vhost16 [create|delete] [example.com]
 ```
