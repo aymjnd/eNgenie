@@ -128,7 +128,7 @@ if [ "$1" = '-n' ]; then
 	nomysql
 	phpfpm7
 	editnginx
-	secureinstall
+	trywrite
 else
 	install_packages
 	ipaddr
@@ -136,5 +136,5 @@ else
 	secureinstall
 	phpfpm7
 	editnginx
-	secureinstall
+	trywrite
 fi
