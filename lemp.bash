@@ -10,9 +10,9 @@ function install_packages()
 ## Usage
 print_help(){
     cat <<EOH
-Usage: $0 [--help|-h] [--nomysql|-n]
-    --help      This help menu
-    --nomysql   not installing MySQL
+Usage: $0 [-h] [-n]
+    -h	| This help menu
+    -n	| not installing MySQL
 EOH
     exit 1
 }
@@ -118,11 +118,11 @@ function trywrite(){
 	echo "You can check your webserver here http://$IP/info.php"
 }
 
-if [ "$1" = '--help'||'-h' ]; then
+if [ "$1" = '-h' ]; then
 	print_help
 fi
 
-if [ "$1" = '--nomysql'||'-n' ]; then
+if [ "$1" = '-n' ]; then
 	install_packages
 	ipaddr
 	nomysql
