@@ -33,9 +33,6 @@ if [ "$(whoami)" != 'root' ]; then
 		exit 1;
 fi
 
-###Update all things!
-apt update && apt upgrade -y
-
 ###Install all necessary things!
 function mysql(){
 	apt install nginx curl mysql-server php-fpm php-mysql -y
@@ -45,9 +42,11 @@ function nomysql(){
 	apt install nginx curl php-fpm php-mysql -y
 }
 
+function ipaddr(){
 ###Get IP/domain server 
 echo -n "Enter your Server IP or domain and press [ENTER]: "
 read IP
+}
 
 ### change /etc/php/7.0/fpm/conf.d/10-opcache.ini
 opcache='/etc/php/7.0/fpm/conf.d/10-opcache.ini'
@@ -120,9 +119,11 @@ fi
 
 if [ "$1" = '--nomysql'||'-n' ]; then
 	install_packages
+	ipaddr
 	nomysql
 else
 	install_packages
+	ipaddr
 	mysql
 	secureinstall
 fi
