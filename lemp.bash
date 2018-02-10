@@ -49,71 +49,76 @@ read IP
 }
 
 ### change /etc/php/7.0/fpm/conf.d/10-opcache.ini
-opcache='/etc/php/7.0/fpm/conf.d/10-opcache.ini'
-sh -c "echo 'opcache.enable=0' >> $opcache"
+function phpfpm7(){
+	opcache='/etc/php/7.0/fpm/conf.d/10-opcache.ini'
+	sh -c "echo 'opcache.enable=0' >> $opcache"
 
-### restart php-fpm
-$restartfpm
+	### restart php-fpm
+	$restartfpm
+}
 
 ### edit 
-if ! echo "server {
-		listen 80 default_server;
-		listen [::]:80 default_server;
+function editnginx(){
+	if ! echo "server {
+			listen 80 default_server;
+			listen [::]:80 default_server;
 
-		root /var/www/html;
-		index index.php index.html index.htm index.nginx-debian.html;
+			root /var/www/html;
+			index index.php index.html index.htm index.nginx-debian.html;
 
-		server_name $IP;
+			server_name $IP;
 
-		location / {
-			try_files $uri $uri/ =404;
-		}
+			location / {
+				try_files $uri $uri/ =404;
+			}
 
-		location ~ \.php$ {
-			include snippets/fastcgi-php.conf;
-			fastcgi_pass unix:/run/php/php7.0-fpm.sock;
-		}
+			location ~ \.php$ {
+				include snippets/fastcgi-php.conf;
+				fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+			}
 
-		location ~ /\.ht {
-			deny all;
-		}
-	}" >| $nginxdefault
-then
-	echo -e $"There is an ERROR create $nginxdefault file"
-	exit;
-else
-	echo -e $"New $nginxdefault Created."
-fi
+			location ~ /\.ht {
+				deny all;
+			}
+		}" >| $nginxdefault
+	then
+		echo -e $"There is an ERROR create $nginxdefault file"
+		exit;
+	else
+		echo -e $"New $nginxdefault Created."
+	fi
 ### make sure nginx can start with new config
-nginx -t
+	nginx -t
 
 ### restart nginx
-$restartnginx
+	$restartnginx
+}
 
 function secureinstall(){
 	echo -e "\n\nValidate password sometimes messed up your password make sure to choose which suit you well...."
 	secure_mysql='mysql_secure_installation'
 	$secure_mysql
 }
-
-if ! echo $domain > $nginx/index.html
-	then
-		echo $"ERROR: Unable to write in $nginx/. Please check permissions."
-		exit;
+function trywrite(){
+	if ! echo $domain > $nginx/index.html
+		then
+			echo $"ERROR: Unable to write in $nginx/. Please check permissions."
+			exit;
+		else
+			echo $"Added index.html into $nginx/"
+		fi
+	if ! echo "<?php phpinfo(); ?>" > $nginx/info.php
+		then
+			echo $"ERROR: Unable to write in $nginx/. Please check permissions."
+			exit;
 	else
-		echo $"Added index.html into $nginx/"
+		echo $"Added info.php into $nginx/"
 	fi
-if ! echo "<?php phpinfo(); ?>" > $nginx/info.php
-	then
-		echo $"ERROR: Unable to write in $nginx/. Please check permissions."
-		exit;
-else
-	echo $"Added info.php into $nginx/"
-fi
 
-echo "You can check your webserver here http://$IP/info.php"
+	echo "You can check your webserver here http://$IP/info.php"
+}
 
-if [ "$1" = '--help'||'-n' ]; then
+if [ "$1" = '--help'||'-h' ]; then
 	print_help
 fi
 
@@ -121,9 +126,15 @@ if [ "$1" = '--nomysql'||'-n' ]; then
 	install_packages
 	ipaddr
 	nomysql
+	phpfpm7
+	editnginx
+	secureinstall
 else
 	install_packages
 	ipaddr
 	mysql
+	secureinstall
+	phpfpm7
+	editnginx
 	secureinstall
 fi
