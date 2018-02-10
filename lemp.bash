@@ -4,7 +4,7 @@ TEXTDOMAIN=lemp
 function install_packages()
 {
 	apt-get update  && apt-get install -y --allow-unauthenticated ${@} 
-	error_check 'Package installation completed'
+	echo 'Package installation completed'
 }
 
 ## Usage
