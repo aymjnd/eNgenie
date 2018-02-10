@@ -1,6 +1,31 @@
 #!/bin/bash
 TEXTDOMAIN=lemp
 
+function install_packages()
+{
+	apt-get update  && apt-get install -y --allow-unauthenticated ${@} 
+	error_check 'Package installation completed'
+}
+
+function dir_check()
+{
+	if [ ! -d $1 ]; then
+		print_notification "$1 does not exist. Creating.."
+		mkdir -p $1
+	else
+		print_notification "$1 already exists. (No problem, We'll use it anyhow)"
+	fi
+}
+## Usage
+print_help(){
+    cat <<EOH
+Usage: $0 [--help|-h] [--nomysql|-n]
+    --help      This help menu
+    --nomysql   not installing MySQL
+EOH
+    exit 1
+}
+
 nginx=/var/www/html
 ### php-fpm restart command
 restartfpm='systemctl restart php7.0-fpm'
@@ -19,8 +44,15 @@ fi
 
 ###Update all things!
 apt update && apt upgrade -y
+
 ###Install all necessary things!
-apt install nginx curl mysql-server php-fpm php-mysql -y
+function mysql(){
+	apt install nginx curl mysql-server php-fpm php-mysql -y
+}
+
+function nomysql(){
+	apt install nginx curl php-fpm php-mysql -y
+}
 
 ###Get IP/domain server 
 echo -n "Enter your Server IP or domain and press [ENTER]: "
@@ -68,9 +100,11 @@ nginx -t
 ### restart nginx
 $restartnginx
 
-echo -e "\n\nValidate password sometimes messed up your password make sure to choose which suit you well...."
-secure_mysql='mysql_secure_installation'
-$secure_mysql
+function secureinstall(){
+	echo -e "\n\nValidate password sometimes messed up your password make sure to choose which suit you well...."
+	secure_mysql='mysql_secure_installation'
+	$secure_mysql
+}
 
 if ! echo $domain > $nginx/index.html
 	then
@@ -87,5 +121,15 @@ else
 	echo $"Added info.php into $nginx/"
 fi
 
-
 echo "You can check your webserver here http://$IP/info.php"
+
+if [ "$1" = '--help'||'-n' ]; then
+	print_help
+fi
+
+if [ "$1" = '--nomysql'||'-n' ]; then
+	nomysql
+else
+	mysql
+	secureinstall
+fi
