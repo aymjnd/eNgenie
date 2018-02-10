@@ -7,15 +7,6 @@ function install_packages()
 	error_check 'Package installation completed'
 }
 
-function dir_check()
-{
-	if [ ! -d $1 ]; then
-		print_notification "$1 does not exist. Creating.."
-		mkdir -p $1
-	else
-		print_notification "$1 already exists. (No problem, We'll use it anyhow)"
-	fi
-}
 ## Usage
 print_help(){
     cat <<EOH
@@ -128,8 +119,10 @@ if [ "$1" = '--help'||'-n' ]; then
 fi
 
 if [ "$1" = '--nomysql'||'-n' ]; then
+	install_packages
 	nomysql
 else
+	install_packages
 	mysql
 	secureinstall
 fi
