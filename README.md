@@ -9,7 +9,17 @@ Intended only for this setup:
 ## Instructions for LEMP(Linux, Nginx, MySQL, PHP)
 For 16.04
 ```bash
--will update this soon-
+$./lemp.bash -h
+Usage: ./lemp.bash [-h] [-n]
+    -h  | This help menu
+    -n  | not installing MySQL
+```
+
+By default this script will update and upgrade your box and install nginx curl mysql-server php-fpm php-mysql
+
+to skip mysql installation, use `-n` switch
+```bash
+$./lemp.bash -n
 ```
  ----------
 ## Instructions for Virtualhost
