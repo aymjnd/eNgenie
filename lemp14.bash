@@ -106,7 +106,7 @@ function secureinstall(){
         $secure_mysql
 }
 function trywrite(){
-        if ! echo $domain > $nginx/index.html
+        if ! echo $IP > $nginx/index.html
                 then
                         echo $"ERROR: Unable to write in $nginx/. Please check permissions."
                         exit;
