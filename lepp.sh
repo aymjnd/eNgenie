@@ -1,5 +1,5 @@
 #!/bin/bash
-TEXTDOMAIN=lemp
+TEXTDOMAIN=lepp
 
 function install_packages()
 {
@@ -10,11 +10,11 @@ function install_packages()
 }
 
 ## Usage
-print_help(){
+function print_help(){
     cat <<EOH
 Usage: $0 [-h] [-n]
     -h	| This help menu
-    -n	| not installing MySQL
+    -n	| install
 EOH
     exit 1
 }
@@ -37,10 +37,6 @@ if [ "$(whoami)" != 'root' ]; then
 fi
 
 ###Install all necessary things!
-function mysql(){
-	apt install nginx nginx-common curl mysql-server php-fpm php-mysql -y
-}
-
 function postgres(){
 	apt install nginx nginx-common curl postgresql postgresql-contrib -y
 }
@@ -49,6 +45,16 @@ function ipaddr(){
 ###Get IP/domain server 
 	echo -n "Enter your Server IP or domain and press [ENTER]: "
 	read IP
+}
+
+function psqlname(){
+	echo -n "Enter your username that you want: "
+	read psqluser
+}
+
+function psqlpwd(){
+	echo -n "Enter your password for user '$psqluser': "
+	read psqlpass
 }
 
 function nmDB(){
@@ -90,18 +96,18 @@ function editnginx(){
 
 ### restart nginx
 	$restartnginx
-}
-
-function secureinstall(){
-	echo -e "\n\nValidate password sometimes messed up your password make sure to choose which suit you well...."
-	secure_mysql='mysql_secure_installation'
-	$secure_mysql
+    $restartpostgres
 }
 
 function tambahDB(){
-	sudo su postgres <<EOF
-	psql -c 'CREATE DATABASE $namaDB;'
-	EOF
+	#sudo su postgres <<'EOF'
+	#psql -c "CREATE DATABASE $namaDB;"
+	#EOF
+    echo -e "\nCREATE USER $psqluser WITH PASSWORD '$psqlpass';\nCREATE DATABASE $namaDB WITH OWNER $psqluser;\nGRANT ALL PRIVILEGES ON DATABASE $namaDB TO $psqluser;\n"
+    sudo -u postgres psql -c "CREATE USER $psqluser WITH PASSWORD '$psqlpass';"
+    sudo -u postgres psql -c "CREATE DATABASE $namaDB WITH OWNER $psqluser;"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $namaDB TO $psqluser;"
+    echo "Finished Database section"
 }
 function trywrite(){
 	if ! echo $domain > $nginx/index.html
@@ -130,15 +136,12 @@ if [ "$1" = '-n' ]; then
 	install_packages
 	ipaddr
 	postgres
-	phpfpm7
+    psqlname
+    psqlpwd
+    nmDB
 	editnginx
+    tambahDB
 	trywrite
 else
-	install_packages
-	ipaddr
-	mysql
-	secureinstall
-	phpfpm7
-	editnginx
-	trywrite
+	print_help
 fi
