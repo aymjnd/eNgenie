@@ -194,8 +194,8 @@ else
 	ipaddr
 	mysql
 	secureinstall
-	DBconfig
 	phpfpm7
 	editnginx
+	DBconfig
 	trywrite
 fi
