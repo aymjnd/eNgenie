@@ -34,7 +34,7 @@ if [ "$(whoami)" != 'root' ]; then
 fi
 
 ###Install all necessary things!
-function mysql(){
+function mysqlinstall(){
 	apt install nginx curl mariadb-server php-fpm php-mysql -y
 }
 
@@ -190,7 +190,7 @@ if [ "$1" = '-n' ]; then
 else
 	install_packages
 	ipaddr
-	mysql
+	mysqlinstall
 	secureinstall
 	phpfpm7
 	editnginx
