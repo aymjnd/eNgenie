@@ -35,11 +35,11 @@ fi
 
 ###Install all necessary things!
 function mysqlinstall(){
-	apt install nginx curl mariadb-server php-fpm php-mysql -y
+	apt install nginx curl mariadb-server redis-server -y
 }
 
 function nomysql(){
-	apt install nginx curl php-fpm php-mysql -y
+	apt install nginx curl redis-server -y
 }
 
 function ipaddr(){
@@ -157,6 +157,14 @@ function DBconfig(){
 
 }
 
+function redissetup(){
+	echo "Enter your redis password: "
+	read redispass
+	sed -i 's|^supervised no|supervised systemd|g' /etc/redis/redis.conf
+	sed -i "s|^# requirepass foobared|requirepass $redispass|g" /etc/redis/redis.conf
+	systemctl restart redis
+}
+
 function trywrite(){
 	if ! echo $domain > $nginx/index.html
 		then
@@ -184,16 +192,16 @@ if [ "$1" = '-n' ]; then
 	install_packages
 	ipaddr
 	nomysql
-	phpfpm7
 	editnginx
+	redissetup
 	trywrite
 else
 	install_packages
 	ipaddr
 	mysqlinstall
 	secureinstall
-	phpfpm7
 	editnginx
 	DBconfig
+	redissetup
 	trywrite
 fi
