@@ -18,8 +18,6 @@ EOH
 }
 
 nginx=/var/www/html
-### php-fpm restart command
-restartfpm='systemctl restart php7.0-fpm'
 
 ### nginx restart command
 restartnginx='systemctl reload nginx'
@@ -46,15 +44,6 @@ function ipaddr(){
 ###Get IP/domain server 
 echo -n "Enter your Server IP or domain and press [ENTER]: "
 read IP
-}
-
-### change /etc/php/7.0/fpm/conf.d/10-opcache.ini
-function phpfpm7(){
-	opcache='/etc/php/7.0/fpm/conf.d/10-opcache.ini'
-	sh -c "echo 'opcache.enable=0' >> $opcache"
-
-	### restart php-fpm
-	$restartfpm
 }
 
 ### edit 
