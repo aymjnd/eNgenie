@@ -162,15 +162,6 @@ function trywrite(){
 		else
 			echo $"Added index.html into $nginx/"
 		fi
-	if ! echo "<?php phpinfo(); ?>" > $nginx/info.php
-		then
-			echo $"ERROR: Unable to write in $nginx/. Please check permissions."
-			exit;
-	else
-		echo $"Added info.php into $nginx/"
-	fi
-
-	echo "You can check your webserver here http://$IP/info.php"
 }
 
 if [ "$1" = '-h' ]; then
