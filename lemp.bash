@@ -19,7 +19,7 @@ EOH
 
 nginx=/var/www/html
 ### php-fpm restart command
-restartfpm='systemctl restart php7.0-fpm'
+restartfpm='systemctl restart php7.4-fpm'
 
 ### nginx restart command
 restartnginx='systemctl reload nginx'
@@ -39,7 +39,7 @@ function mysql(){
 }
 
 function nomysql(){
-	apt install nginx curl php-fpm php-mysql -y
+	apt install nginx curl php-fpm -y
 }
 
 function ipaddr(){
@@ -48,9 +48,9 @@ echo -n "Enter your Server IP or domain and press [ENTER]: "
 read IP
 }
 
-### change /etc/php/7.0/fpm/conf.d/10-opcache.ini
+### change /etc/php/7.4/fpm/conf.d/10-opcache.ini
 function phpfpm7(){
-	opcache='/etc/php/7.0/fpm/conf.d/10-opcache.ini'
+	opcache='/etc/php/7.4/fpm/conf.d/10-opcache.ini'
 	sh -c "echo 'opcache.enable=0' >> $opcache"
 
 	### restart php-fpm
@@ -62,21 +62,16 @@ function editnginx(){
 	if ! echo "server {
 			listen 80 default_server;
 			listen [::]:80 default_server;
-
 			root /var/www/html;
 			index index.php index.html index.htm index.nginx-debian.html;
-
 			server_name $IP;
-
 			location / {
 				try_files \$uri \$uri/ =404;
 			}
-
 			location ~ \.php\$ {
 				include snippets/fastcgi-php.conf;
-				fastcgi_pass unix:/run/php/php7.0-fpm.sock;
+				fastcgi_pass unix:/run/php/php7.4-fpm.sock;
 			}
-
 			location ~ /\.ht {
 				deny all;
 			}
