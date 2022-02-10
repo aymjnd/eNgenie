@@ -56,12 +56,12 @@ if [ "$action" == 'create' ]
 			exit;
 		fi
 		### create php-fpm pool
-		phpfpm="/etc/php/7.0/fpm/pool.d/$domain.conf"
+		phpfpm="/etc/php/7.4/fpm/pool.d/$domain.conf"
 
 		if ! echo "[$domain]
 			user = www-data
 			group = www-data
-			listen = /var/run/php7-fpm-$domain.sock
+			listen = /var/run/php/php7.4-fpm-$domain.sock
 			listen.owner = www-data
 			listen.group = www-data
 			php_admin_value[disable_functions] = exec,passthru,shell_exec,system
@@ -81,10 +81,10 @@ if [ "$action" == 'create' ]
 		fi
 		
 		### restart php-fpm
-		sudo systemctl restart php7.0-fpm
+		sudo systemctl restart php7.4-fpm
 		
-		### change /etc/php/7.0/fpm/conf.d/10-opcache.ini
-		opcache='/etc/php/7.0/fpm/conf.d/10-opcache.ini'
+		### change /etc/php/7.4/fpm/conf.d/10-opcache.ini
+		opcache='/etc/php/7.4/fpm/conf.d/10-opcache.ini'
 		sh -c "echo 'opcache.enable=0' >> $opcache"
 		
 		### check if directory exists or not
@@ -116,44 +116,35 @@ if [ "$action" == 'create' ]
 	root $nginx$root;
 	index index.php index.html index.htm;
 	server_name $domain;
-
 	# serve static files directly
 	location ~* \.(jpg|jpeg|gif|css|png|js|ico|html)\$ {
 		access_log off;
 		expires max;
 	}
-
 	# catch all
 	error_page 404 /index.php;
-
 	location / {
 	#beauty rewrite like http://example.com/waw/
 	#try_files $uri $uri/ /index.php?$args;
 	
 	#standard try
 	try_files \$uri \$uri/ /index.php?\$query_string;
-
 	#redirect
 	# include /etc/nginx/templates/redirects;
 	}
-
 	if (!-d \$request_filename) {
 		rewrite ^/(.+)/\$ /\$1 permanent;
 	}
-
 	location ~* \.php\$ {
 		try_files \$uri =404;
 		# Server PHP config.
-		fastcgi_pass unix:/var/run/php7-fpm-$domain.sock;
+		fastcgi_pass unix:/var/run/php7.4-fpm-$domain.sock;
 		fastcgi_index index.php;
 		fastcgi_split_path_info ^(.+\.php)(/.+)\$;
-
 		# Typical vars in here, nothing interesting.
 		include fastcgi_params;
 		fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-
 	}
-
 	location ~ /\.ht {
 		deny all;
 	}
@@ -208,7 +199,7 @@ if [ "$action" == 'create' ]
 			rm $sitesAvailable$domain
 			
 			rm /var/run/php7-fpm-$domain.sock
-			systemctl restart php7.0-fpm
+			systemctl restart php7.4-fpm
 			
 		fi
 
@@ -216,4 +207,3 @@ if [ "$action" == 'create' ]
 		echo -e $"$olddir deleted. You don't have backup? It's too late now."
 		exit 0;
 fi
-
